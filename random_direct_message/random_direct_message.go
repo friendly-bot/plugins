@@ -29,11 +29,11 @@ func init() {
 	rand.Seed(time.Now().Unix())
 }
 
-func NewCron(probability, chance int, messages []string) bot.Cron {
+func NewCron(c *Configuration) bot.Cron {
 	return &RandomDirectMessage{
-		probability: probability,
-		chance:      chance,
-		messages:    messages,
+		probability: c.Probability,
+		chance:      c.Chance,
+		messages:    c.Messages,
 	}
 }
 
