@@ -1,0 +1,22 @@
+language: go
+
+go:
+  - "1.10.x"
+
+install:
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  - dep ensure
+  - wget https://dl.minio.io/client/mc/release/linux-amd64/mc
+  - chmod +x mc
+
+before_script:
+  - mc config host add minio ${URL_S3} ${ACCESS_KEY_S3} ${SECRET_KEY_S3} S3v4
+
+script:
+  - export GOOS=linux GOARCH=amd64
+  - for plugin in $(find . -type d | egrep -v "^\.(/vendor|/\.|$)" | cut -c3-); do \
+      plugin_name="${plugin}-$(cat ${plugin}/VERSION)-${GOOS}-${GOARCH}.so"; \
+      echo "build ${plugin_name}"; \
+      go build -buildmode=plugin -o ${plugin_name} ${plugin}/*.go; \
+      mc cp ${plugin_name} friendly-bot/plugins
+    done

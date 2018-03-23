@@ -8,24 +8,30 @@ import (
 	"github.com/nlopes/slack"
 )
 
+// Config structure set by the bot api
 var Config Configuration
 
 type (
+	// Configuration for the plugin, unmarshal by bot api
 	Configuration struct {
+		// Message to send to the user
 		Message string `json:"message"`
 	}
 
+	// UseInviteNotAt implement bot.Cron
 	UseInviteNotAt struct {
 		message string
 	}
 )
 
+// NewCron return interface bot.Cron used by the bot
 func NewFeature(c *Configuration) *UseInviteNotAt {
 	return &UseInviteNotAt{
 		message: c.Message,
 	}
 }
 
+// Skip the run depend on the context, return bool (need to be skipped), string (reason of the skip), and an error if any
 func (f *UseInviteNotAt) Skip(ctx *bot.Context) (bool, string, error) {
 	matched, err := regexp.MatchString("^<@\\w*>$", strings.Trim(ctx.MsgEvent.Text, " "))
 
@@ -54,6 +60,7 @@ func (f *UseInviteNotAt) Skip(ctx *bot.Context) (bool, string, error) {
 	return false, "", nil
 }
 
+// Run the cron
 func (f *UseInviteNotAt) Run(ctx *bot.Context) error {
 	_, _, err := ctx.RTM.PostMessage(
 		ctx.MsgEvent.Channel,

@@ -9,15 +9,23 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Config structure set by the bot api
 var Config Configuration
 
 type (
+	// Configuration for the plugin, unmarshal by bot api
 	Configuration struct {
+		// Chance is used to calculate the chance to run this feature (Probability/Chance)
 		Probability int      `json:"probability"`
+
+		// Chance is used to calculate the chance to run this feature (Probability/Chance)
 		Chance      int      `json:"chance"`
+
+		// Messages can be send by this feature
 		Messages    []string `json:"messages"`
 	}
 
+	// RandomDirectMessage implement bot.Cron
 	RandomDirectMessage struct {
 		probability int
 		chance      int
@@ -29,14 +37,16 @@ func init() {
 	rand.Seed(time.Now().Unix())
 }
 
-func NewCron(c *Configuration) bot.Cron {
+// NewCron return interface bot.Cron used by the bot
+func NewCron() bot.Cron {
 	return &RandomDirectMessage{
-		probability: c.Probability,
-		chance:      c.Chance,
-		messages:    c.Messages,
+		probability: Config.Probability,
+		chance:      Config.Chance,
+		messages:    Config.Messages,
 	}
 }
 
+// Skip the run depend on the context, return bool (need to be skipped), string (reason of the skip), and an error if any
 func (f *RandomDirectMessage) Skip(ctx *bot.Context) (bool, string, error) {
 	if r := rand.Intn(f.chance); r >= f.probability {
 		ctx.Log.WithField("random", r).Debug("roll")
@@ -46,6 +56,7 @@ func (f *RandomDirectMessage) Skip(ctx *bot.Context) (bool, string, error) {
 	return false, "", nil
 }
 
+// Run the cron
 func (f *RandomDirectMessage) Run(ctx *bot.Context) error {
 	users, err := ctx.Bot.GetActiveUsers()
 
