@@ -14,4 +14,4 @@ before_script:
 
 script:
   - export GOOS=linux GOARCH=amd64
-  - for plugin in $(find . -type d | egrep -v "^\.(/vendor|/\.|$)" | cut -c3-); do plugin_name="${plugin}-$(cat ${plugin}/VERSION)-${GOOS}-${GOARCH}.so"; echo "build ${plugin_name}"; go build -buildmode=plugin -o ${plugin_name} ${plugin}/*.go; ./mc cp ${plugin_name} friendly-bot/plugins; done
+  - for plugin in $(find . -type d | egrep -v "^\.(/vendor|/\.|$)" | cut -c3-); do plugin_name="${plugin}-$(cat ${plugin}/VERSION)-${GOOS}-${GOARCH}.so"; echo "build ${plugin_name}"; go build -buildmode=plugin -o ${plugin_name} ${plugin}/*.go; ./mc cp ${plugin_name} minio/friendly-bot/plugins; done
