@@ -18,5 +18,5 @@ script:
       plugin_name="${plugin}-$(cat ${plugin}/VERSION)-${GOOS}-${GOARCH}.so"; \
       echo "build ${plugin_name}"; \
       go build -buildmode=plugin -o ${plugin_name} ${plugin}/*.go; \
-      mc cp ${plugin_name} friendly-bot/plugins
+      ./mc cp ${plugin_name} friendly-bot/plugins
     done
