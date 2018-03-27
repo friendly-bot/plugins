@@ -8,9 +8,6 @@ import (
 	"github.com/nlopes/slack"
 )
 
-// Config structure set by the bot api
-var Config Configuration
-
 type (
 	// Configuration for the plugin, unmarshal by bot api
 	Configuration struct {
@@ -24,10 +21,15 @@ type (
 	}
 )
 
+// NewConfiguration return default configuration for this feature
+func NewConfiguration() *Configuration {
+	return &Configuration{}
+}
+
 // NewCron return interface bot.Cron used by the bot
-func NewFeature(c *Configuration) *UseInviteNotAt {
+func NewFeature(conf *Configuration) *UseInviteNotAt {
 	return &UseInviteNotAt{
-		message: c.Message,
+		message: conf.Message,
 	}
 }
 

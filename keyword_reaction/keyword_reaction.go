@@ -8,9 +8,6 @@ import (
 	"github.com/nlopes/slack"
 )
 
-// Config structure set by the bot api
-var Config Configuration
-
 type (
 	// Configuration for the plugin, unmarshal by bot api
 	Configuration struct {
@@ -24,10 +21,15 @@ type (
 	}
 )
 
+// NewConfiguration return default configuration for this feature
+func NewConfiguration() *Configuration {
+	return &Configuration{}
+}
+
 // NewFeature return interface bot.Feature used by the bot for run it
-func NewFeature() bot.Feature {
+func NewFeature(conf *Configuration) bot.Feature {
 	return &KeywordReaction{
-		reactions: Config.Reactions,
+		reactions: conf.Reactions,
 	}
 }
 

@@ -9,9 +9,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Config structure set by the bot api
-var Config Configuration
-
 type (
 	// Configuration for the plugin, unmarshal by bot api
 	Configuration struct {
@@ -33,11 +30,16 @@ func init() {
 	rand.Seed(time.Now().Unix())
 }
 
+// NewConfiguration return default configuration for this feature
+func NewConfiguration() *Configuration {
+	return &Configuration{}
+}
+
 // NewFeature return interface bot.Feature used by the bot for run it
-func NewFeature() bot.Feature {
+func NewFeature(conf *Configuration) bot.Feature {
 	return &RandomReaction{
-		chance:    Config.Chance,
-		reactions: Config.Reactions,
+		chance:    conf.Chance,
+		reactions: conf.Reactions,
 	}
 }
 

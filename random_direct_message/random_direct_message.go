@@ -9,20 +9,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Config structure set by the bot api
-var Config Configuration
-
 type (
 	// Configuration for the plugin, unmarshal by bot api
 	Configuration struct {
 		// Chance is used to calculate the chance to run this feature (Probability/Chance)
-		Probability int      `json:"probability"`
+		Probability int `json:"probability"`
 
 		// Chance is used to calculate the chance to run this feature (Probability/Chance)
-		Chance      int      `json:"chance"`
+		Chance int `json:"chance"`
 
 		// Messages can be send by this feature
-		Messages    []string `json:"messages"`
+		Messages []string `json:"messages"`
 	}
 
 	// RandomDirectMessage implement bot.Cron
@@ -37,12 +34,17 @@ func init() {
 	rand.Seed(time.Now().Unix())
 }
 
+// NewConfiguration return default configuration for this feature
+func NewConfiguration() *Configuration {
+	return &Configuration{}
+}
+
 // NewCron return interface bot.Cron used by the bot
-func NewCron() bot.Cron {
+func NewCron(conf *Configuration) bot.Cron {
 	return &RandomDirectMessage{
-		probability: Config.Probability,
-		chance:      Config.Chance,
-		messages:    Config.Messages,
+		probability: conf.Probability,
+		chance:      conf.Chance,
+		messages:    conf.Messages,
 	}
 }
 
