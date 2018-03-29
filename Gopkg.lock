@@ -4,8 +4,8 @@
 [[projects]]
   name = "github.com/friendly-bot/slack-bot"
   packages = ["."]
-  revision = "6a9363471fa4ef245ca567e57de68f59252bf3bb"
-  version = "0.4.0"
+  revision = "1367687199712b01c4ac7a71b979467fb7de02e6"
+  version = "0.4.1"
 
 [[projects]]
   name = "github.com/go-redis/redis"
@@ -64,6 +64,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fa80aad319121f43cb7dae7c8f1800faa4f7144d7c7cfca2e2248fc9a4f469a6"
+  inputs-digest = "62b78470932afe4788b5dc367670dae24af8ccfdd84c3888c63f79b0a3d2a781"
   solver-name = "gps-cdcl"
   solver-version = 1
