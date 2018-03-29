@@ -13,9 +13,8 @@ after_install:
   - ./mc config host add minio ${URL_S3} ${ACCESS_KEY_S3} ${SECRET_KEY_S3} S3v4
 
 before_script:
-  - rm -rf vendor/github.com/friendly-bot/slack-bot
-  - go get github.com/friendly-bot/slack-bot
-  - cd ${GOPATH}/src/github.com/friendly-bot/slack-bot; git checkout 0.4.1; cd -
+  # hack path for plugin
+  - mv vendor/ ${GOPATH}/src/
 
 script:
   - export GOOS=linux GOARCH=amd64
