@@ -1,21 +1,28 @@
+sudo: required
+
 language: go
 
 go:
   - "1.10.x"
 
+env:
+  - GOOS=linux
+  - GOARCH=amd64
+  - SLACK_BOT_VERSION=0.4.1
+
 install:
-  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-  - dep ensure
   - wget https://dl.minio.io/client/mc/release/linux-amd64/mc
   - chmod +x mc
-
-after_install:
-  - ./mc config host add minio ${URL_S3} ${ACCESS_KEY_S3} ${SECRET_KEY_S3} S3v4
+  - sudo mv mc /usr/local/bin/mc
+  - mc config host add minio ${URL_S3} ${ACCESS_KEY_S3} ${SECRET_KEY_S3} S3v4
 
 before_script:
-  # hack path for plugin
-  - mv vendor/ ${GOPATH}/src/
+  - go get -t ./...
+  - cd ${GOPATH}/src/github.com/friendly-bot/slack-bot; git checkout ${SLACK_BOT_VERSION}; cd -
 
 script:
-  - export GOOS=linux GOARCH=amd64
-  - for plugin in $(find . -type d | egrep -v "^\.(/vendor|/\.|$)" | cut -c3-); do plugin_name="${plugin}-$(cat ${plugin}/VERSION)-${GOOS}-${GOARCH}.so"; echo "build ${plugin_name}"; go build -buildmode=plugin -o ${plugin_name} ${plugin}/*.go; ./mc cp ${plugin_name} minio/friendly-bot/plugins; done
+  - for plugin in $(find . -type d | egrep -v "^\.(/vendor|/\.|$)" | cut -c3-); do
+      plugin_name="${plugin}-b${SLACK_BOT_VERSION}-${GOOS}-${GOARCH}-v$(cat ${plugin}/VERSION).so";
+      go build -buildmode=plugin -o ${plugin_name} ${plugin}/*.go;
+      mc cp ${plugin_name} minio/friendly-bot/plugins;
+    done
