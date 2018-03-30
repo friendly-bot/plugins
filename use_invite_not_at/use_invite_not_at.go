@@ -12,12 +12,16 @@ type (
 	// Configuration for the plugin, unmarshal by bot api
 	Configuration struct {
 		// Message to send to the user
-		Message string `json:"message"`
+		Message       string   `json:"message"`
+		ReactionsGood []string `json:"reactions_good"`
+		ReactionsBad  []string `json:"reactions_bad"`
 	}
 
 	// UseInviteNotAt implement bot.Cron
 	UseInviteNotAt struct {
-		message string
+		message       string
+		reactionsGood []string
+		reactionsBad  []string
 	}
 )
 
@@ -26,10 +30,12 @@ func NewConfiguration() *Configuration {
 	return &Configuration{}
 }
 
-// NewCron return interface bot.Cron used by the bot
+// NewFeature return interface bot.Cron used by the bot
 func NewFeature(conf *Configuration) *UseInviteNotAt {
 	return &UseInviteNotAt{
-		message: conf.Message,
+		message:       conf.Message,
+		reactionsGood: conf.ReactionsGood,
+		reactionsBad:  conf.ReactionsBad,
 	}
 }
 
@@ -64,7 +70,7 @@ func (f *UseInviteNotAt) Skip(ctx *bot.Context) (bool, string, error) {
 
 // Run the cron
 func (f *UseInviteNotAt) Run(ctx *bot.Context) error {
-	_, _, err := ctx.RTM.PostMessage(
+	_, ts, err := ctx.RTM.PostMessage(
 		ctx.MsgEvent.Channel,
 		f.message,
 		slack.PostMessageParameters{
@@ -74,5 +80,24 @@ func (f *UseInviteNotAt) Run(ctx *bot.Context) error {
 		},
 	)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	badIR := slack.ItemRef{Channel: ctx.MsgEvent.Channel, Timestamp: ctx.MsgEvent.Timestamp}
+	goodIR := slack.ItemRef{Channel: ctx.MsgEvent.Channel, Timestamp: ts}
+
+	for _, reaction := range f.reactionsBad {
+		if err := ctx.RTM.AddReaction(reaction, badIR); err != nil {
+			return err
+		}
+	}
+
+	for _, reaction := range f.reactionsGood {
+		if err := ctx.RTM.AddReaction(reaction, goodIR); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
