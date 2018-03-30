@@ -6,7 +6,7 @@ go:
   - "1.10.x"
 
 env:
-  - GOOS=linux GOARCH=amd64 SLACK_BOT_VERSION=0.4.1
+  - SLACK_BOT_VERSION=0.4.1
 
 install:
   - wget https://dl.minio.io/client/mc/release/linux-amd64/mc
@@ -19,6 +19,7 @@ before_script:
   - cd ${GOPATH}/src/github.com/friendly-bot/slack-bot; git checkout ${SLACK_BOT_VERSION}; cd -
 
 script:
+  - export GOOS=linux GOARCH=amd64
   - for plugin in $(find . -type d | egrep -v "^\.(/vendor|/\.|$)" | cut -c3-); do
       plugin_name="${plugin}-b${SLACK_BOT_VERSION}-${GOOS}-${GOARCH}-v$(cat ${plugin}/VERSION).so";
       go build -buildmode=plugin -o ${plugin_name} ${plugin}/*.go;
