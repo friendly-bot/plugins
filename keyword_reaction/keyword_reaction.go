@@ -13,11 +13,15 @@ type (
 	Configuration struct {
 		// Reactions is a map[reaction][]keyword to use when message is posted
 		Reactions map[string][]string `json:"reactions"`
+
+		// Keyword is a map[keyword][]reaction to add when message is posted
+		Keywords map[string][]string `json:"keywords"`
 	}
 
 	// KeywordReaction implement bot.Feature
 	KeywordReaction struct {
 		reactions map[string][]string
+		keywords  map[string][]string
 	}
 )
 
@@ -30,6 +34,7 @@ func NewConfiguration() *Configuration {
 func NewFeature(conf *Configuration) bot.Feature {
 	return &KeywordReaction{
 		reactions: conf.Reactions,
+		keywords:  conf.Keywords,
 	}
 }
 
@@ -51,6 +56,19 @@ func (f *KeywordReaction) Run(ctx *bot.Context) error {
 		if contains(sentence, keywords) {
 			if err := ctx.RTM.AddReaction(reaction, ir); err != nil {
 				l.Error(err)
+			}
+		}
+	}
+
+	for keyword, reactions := range f.keywords {
+		l := ctx.Log.WithField("keyword", keyword)
+		l.Debug("search keyword")
+
+		if strings.Contains(sentence, fmt.Sprintf(" %s ", keyword)) {
+			for _, reaction := range reactions {
+				if err := ctx.RTM.AddReaction(reaction, ir); err != nil {
+					l.Error(err)
+				}
 			}
 		}
 	}
