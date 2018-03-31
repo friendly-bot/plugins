@@ -13,7 +13,7 @@ type (
 	// Configuration for the plugin, unmarshal by bot api
 	Configuration struct {
 		// Chance is used to calculate the chance to add reaction (Probability/Chance)
-		Chance    int            `json:"chance"`
+		Chance int `json:"chance"`
 
 		// Reactions is map[reaction]probability, if random[0;Chance[ < Probability -> add reaction
 		Reactions map[string]int `json:"reactions"`

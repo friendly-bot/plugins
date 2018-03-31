@@ -12,13 +12,13 @@ type (
 	// Configuration for the plugin, unmarshal by bot api
 	Configuration struct {
 		// Message to send to the user
-		Message       string   `json:"message"`
+		Message string `json:"message"`
 
 		// ReactionsGood list of reactions to add on good use of /invite
 		ReactionsGood []string `json:"reactions_good"`
 
 		// ReactionsBad list of reactions to add on bad use of /invite
-		ReactionsBad  []string `json:"reactions_bad"`
+		ReactionsBad []string `json:"reactions_bad"`
 	}
 
 	// UseInviteNotAt implement bot.Cron
