@@ -20,6 +20,9 @@ type (
 
 		// Messages can be send by this feature
 		Messages []string `json:"messages"`
+
+		// TalkAfter x hour, for avoid spam
+		TalkAfter int `json:"talk_after"`
 	}
 
 	// RandomDirectMessage implement bot.Cron
@@ -27,6 +30,7 @@ type (
 		probability int
 		chance      int
 		messages    []string
+		talkAfter   time.Duration
 	}
 )
 
@@ -45,6 +49,7 @@ func NewCron(conf *Configuration) bot.Cron {
 		probability: conf.Probability,
 		chance:      conf.Chance,
 		messages:    conf.Messages,
+		talkAfter:   time.Hour * time.Duration(conf.TalkAfter),
 	}
 }
 
@@ -85,6 +90,10 @@ func (f *RandomDirectMessage) Run(ctx *bot.Context) error {
 	}).Info("send direct message")
 
 	_, _, err = ctx.RTM.PostMessage(user.ID, message, slack.PostMessageParameters{AsUser: true})
+
+	if err == nil {
+		return ctx.Bot.StopTalkToUser(user.ID, f.talkAfter)
+	}
 
 	return err
 }
