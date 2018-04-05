@@ -60,28 +60,22 @@ func (f *RandomDirectMessage) Skip(ctx *bot.Context) (bool, string, error) {
 		return true, "random greater than probability", nil
 	}
 
+	if len(f.messages) == 0 {
+		return true, "no message", nil
+	}
+
+
 	return false, "", nil
 }
 
 // Run the cron
 func (f *RandomDirectMessage) Run(ctx *bot.Context) error {
-	users, err := ctx.Bot.GetActiveUsers()
+	user, err := ctx.Bot.GetUserToTalk()
 
 	if err != nil {
 		return err
 	}
 
-	ctx.Log.WithFields(logrus.Fields{
-		"active_users":  len(users),
-		"count_message": len(f.messages),
-	}).Debug("count")
-
-	if len(f.messages) == 0 || len(users) == 0 {
-		ctx.Log.Warn("empty list")
-		return nil
-	}
-
-	user := users[rand.Intn(len(users))]
 	message := f.messages[rand.Intn(len(f.messages))]
 
 	ctx.Log.WithFields(logrus.Fields{
