@@ -11,6 +11,7 @@ This repository store all plugins available for [slack-bot](https://www.github.c
 * [Random direct message](random_direct_message/README.md)
 * [Random reaction](random_reaction/README.md)
 * [Use invite not at](use_invite_not_at/README.md)
+* [Notify deleted message](notify_deleted_message/README.md)
 
 ## Contribute
 
