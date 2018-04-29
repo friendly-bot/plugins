@@ -1,4 +1,4 @@
-PLUGINS := keyword_reaction random_reaction use_invite_not_at random_direct_message auto_attachment_action notify_deleted_message
+PLUGINS := keyword_reaction random_reaction use_invite_not_at random_direct_message auto_attachment_action notify_deleted_message movie_announcement
 
 build-all:
 	@for p in $(PLUGINS); do \

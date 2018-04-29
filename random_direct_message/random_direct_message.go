@@ -64,7 +64,6 @@ func (f *RandomDirectMessage) Skip(ctx *bot.Context) (bool, string, error) {
 		return true, "no message", nil
 	}
 
-
 	return false, "", nil
 }
 
