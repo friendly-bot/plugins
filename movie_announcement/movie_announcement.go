@@ -206,6 +206,7 @@ func (f *MovieAnnoucement) Run(ctx *bot.Context) error {
 
 		a := slack.Attachment{
 			Title:    movie.Title,
+			Text:     movie.SynopsisShort,
 			ImageURL: movie.Poster.Href,
 			Color:    colors[i%2],
 			Fields: []slack.AttachmentField{
