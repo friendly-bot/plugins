@@ -37,6 +37,8 @@ const (
 
 	// LinkTrailers is rel value for trailers
 	LinkTrailers = "aco:web_trailers"
+
+	proxy = "https://images.weserv.nl/?url=%s&h=%d"
 )
 
 var colors = []string{"#FECC00", "#6197D0"}
@@ -52,13 +54,17 @@ type (
 
 		// SecretKey of allocine api
 		SecretKey string `json:"secret_key"`
+
+		// HeightImage for the poster
+		HeightImage int `json:"height_image"`
 	}
 
 	// MovieAnnoucement implement bot.Cron
 	MovieAnnoucement struct {
-		channel    string
-		partnerKey string
-		secretKey  string
+		channel     string
+		partnerKey  string
+		secretKey   string
+		heightImage int
 	}
 )
 
@@ -170,15 +176,18 @@ type (
 
 // NewConfiguration return default configuration for this feature
 func NewConfiguration() *Configuration {
-	return &Configuration{}
+	return &Configuration{
+		HeightImage: 200,
+	}
 }
 
 // NewCron return interface bot.Cron used by the bot
 func NewCron(conf *Configuration) bot.Cron {
 	return &MovieAnnoucement{
-		channel:    conf.Channel,
-		partnerKey: conf.PartnerKey,
-		secretKey:  conf.SecretKey,
+		channel:     conf.Channel,
+		partnerKey:  conf.PartnerKey,
+		secretKey:   conf.SecretKey,
+		heightImage: conf.HeightImage,
 	}
 }
 
@@ -208,7 +217,7 @@ func (f *MovieAnnoucement) Run(ctx *bot.Context) error {
 		a := slack.Attachment{
 			Title:    movie.Title,
 			Text:     movie.SynopsisShort,
-			ImageURL: movie.Poster.Href,
+			ImageURL: generateURL(movie.Poster.Href, f.heightImage),
 			Color:    colors[count%2],
 			Fields: []slack.AttachmentField{
 				{Title: "Directors", Value: movie.CastingShort.Directors, Short: true},
@@ -232,6 +241,13 @@ func (f *MovieAnnoucement) Run(ctx *bot.Context) error {
 	}
 
 	return err
+}
+
+func generateURL(url string, h int) string {
+	url = strings.TrimPrefix(url, "http://")
+	url = strings.TrimPrefix(url, "https://")
+
+	return fmt.Sprintf(proxy, url, h)
 }
 
 func (f *MovieAnnoucement) retrieveReleaseMoviesToday(ctx *bot.Context) ([]Movie, error) {
