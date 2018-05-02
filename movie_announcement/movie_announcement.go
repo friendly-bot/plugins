@@ -198,8 +198,9 @@ func (f *MovieAnnoucement) Run(ctx *bot.Context) error {
 	today := time.Now().Format("2006-01-02")
 
 	var aa []slack.Attachment
+	var count int
 
-	for i, movie := range movies {
+	for _, movie := range movies {
 		if movie.Release.ReleaseState.Value == ReleaseStateReprise || movie.Release.ReleaseVersion.Value == ReleaseVersionRestore || movie.Release.ReleaseDate != today {
 			continue
 		}
@@ -208,7 +209,7 @@ func (f *MovieAnnoucement) Run(ctx *bot.Context) error {
 			Title:    movie.Title,
 			Text:     movie.SynopsisShort,
 			ImageURL: movie.Poster.Href,
-			Color:    colors[i%2],
+			Color:    colors[count%2],
 			Fields: []slack.AttachmentField{
 				{Title: "Directors", Value: movie.CastingShort.Directors, Short: true},
 				{Title: "Genres", Value: movie.Genres.AllGenres(), Short: true},
@@ -223,6 +224,7 @@ func (f *MovieAnnoucement) Run(ctx *bot.Context) error {
 		}
 
 		aa = append(aa, a)
+		count++
 	}
 
 	if len(aa) > 0 {
