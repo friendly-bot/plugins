@@ -200,12 +200,8 @@ func (f *MovieAnnoucement) Run(ctx *bot.Context) error {
 	var aa []slack.Attachment
 
 	for i, movie := range movies {
-		if movie.Release.ReleaseState.Value == ReleaseStateReprise || movie.Release.ReleaseVersion.Value == ReleaseVersionRestore {
+		if movie.Release.ReleaseState.Value == ReleaseStateReprise || movie.Release.ReleaseVersion.Value == ReleaseVersionRestore || movie.Release.ReleaseDate != today {
 			continue
-		}
-
-		if movie.Release.ReleaseDate != today {
-			break
 		}
 
 		a := slack.Attachment{
@@ -228,7 +224,9 @@ func (f *MovieAnnoucement) Run(ctx *bot.Context) error {
 		aa = append(aa, a)
 	}
 
-	_, _, err = ctx.RTM.PostMessage(f.channel, "Sorties de la semaine", slack.PostMessageParameters{Attachments: aa})
+	if len(aa) > 0 {
+		_, _, err = ctx.RTM.PostMessage(f.channel, "Sorties de la semaine", slack.PostMessageParameters{Attachments: aa})
+	}
 
 	return err
 }
