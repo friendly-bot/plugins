@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/friendly-bot/slack-bot"
-	"io/ioutil"
 )
 
 const endpoint = "https://slack.com/api/chat.command"
