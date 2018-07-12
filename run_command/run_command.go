@@ -68,11 +68,7 @@ func (f *RunCommand) Run(ctx *bot.Context) error {
 
 	c := http.Client{Timeout: 5 * time.Second}
 
-	res, err := c.Do(req)
-
-	ctx.Log.Warn(res.StatusCode)
-	s, _ := ioutil.ReadAll(res.Body)
-	ctx.Log.Warn(string(s))
+	_, err = c.Do(req)
 
 	return err
 }
