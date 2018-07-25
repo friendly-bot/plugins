@@ -16,6 +16,7 @@ install:
 
 before_script:
   - go get github.com/friendly-bot/slack-bot
+  - go get github.com/grokify/html-strip-tags-go
   - cd ${GOPATH}/src/github.com/friendly-bot/slack-bot; git checkout ${SLACK_BOT_VERSION}; cd -
 
 script:
