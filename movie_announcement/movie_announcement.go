@@ -4,17 +4,16 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
-	"errors"
-
-	"strings"
-
 	"github.com/friendly-bot/slack-bot"
+	"github.com/grokify/html-strip-tags-go"
 	"github.com/nlopes/slack"
 	"github.com/sirupsen/logrus"
 )
@@ -216,7 +215,7 @@ func (f *MovieAnnoucement) Run(ctx *bot.Context) error {
 
 		a := slack.Attachment{
 			Title:    movie.Title,
-			Text:     movie.SynopsisShort,
+			Text:     strip.StripTags(movie.SynopsisShort),
 			ImageURL: generateURL(movie.Poster.Href, f.heightImage),
 			Color:    colors[count%2],
 			Fields: []slack.AttachmentField{
