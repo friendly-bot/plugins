@@ -96,7 +96,10 @@ func (f *NotifyDeletedMessage) notify(ctx *bot.Context) error {
 		return err
 	}
 
-	_, _, err := ctx.RTM.PostMessage(m.User, fmt.Sprintf("%s\n>%s", f.message, m.Text), slack.PostMessageParameters{AsUser: true})
+	_, _, err := ctx.RTM.PostMessage(m.User,
+		slack.MsgOptionText(fmt.Sprintf("%s\n>%s", f.message, m.Text), false),
+		slack.MsgOptionAsUser(true),
+	)
 
 	return err
 }

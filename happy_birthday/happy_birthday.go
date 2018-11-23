@@ -66,7 +66,7 @@ func (f *HappyBirthday) Run(ctx *bot.Context) error {
 		m = fmt.Sprintf("%s +%d", m, days)
 	}
 
-	_, _, err := ctx.RTM.PostMessage(f.User, m, slack.PostMessageParameters{AsUser: true})
+	_, _, err := ctx.RTM.PostMessage(f.User, slack.MsgOptionText(m, false), slack.MsgOptionAsUser(true))
 
 	return err
 }

@@ -6,7 +6,7 @@ go:
   - "1.10.x"
 
 env:
-  - SLACK_BOT_VERSION=0.5.8
+  - SLACK_BOT_VERSION=0.5.9
 
 install:
   - wget https://dl.minio.io/client/mc/release/linux-amd64/mc

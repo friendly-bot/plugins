@@ -82,7 +82,10 @@ func (f *RandomDirectMessage) Run(ctx *bot.Context) error {
 		"message": message,
 	}).Info("send direct message")
 
-	_, _, err = ctx.RTM.PostMessage(user.ID, message, slack.PostMessageParameters{AsUser: true})
+	_, _, err = ctx.RTM.PostMessage(user.ID,
+		slack.MsgOptionText(message, false),
+		slack.MsgOptionAsUser(true),
+	)
 
 	if err == nil {
 		return ctx.Bot.StopTalkToUser(user.ID, f.talkAfter)

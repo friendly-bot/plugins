@@ -76,12 +76,9 @@ func (f *UseInviteNotAt) Skip(ctx *bot.Context) (bool, string, error) {
 func (f *UseInviteNotAt) Run(ctx *bot.Context) error {
 	_, ts, err := ctx.RTM.PostMessage(
 		ctx.MsgEvent.Channel,
-		f.message,
-		slack.PostMessageParameters{
-			ThreadTimestamp: ctx.MsgEvent.Timestamp,
-			UnfurlLinks:     true,
-			UnfurlMedia:     true,
-		},
+		slack.MsgOptionText(f.message, false),
+		slack.MsgOptionTS(ctx.MsgEvent.Timestamp),
+		slack.MsgOptionEnableLinkUnfurl(),
 	)
 
 	if err != nil {

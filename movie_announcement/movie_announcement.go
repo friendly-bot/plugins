@@ -236,7 +236,10 @@ func (f *MovieAnnoucement) Run(ctx *bot.Context) error {
 	}
 
 	if len(aa) > 0 {
-		_, _, err = ctx.RTM.PostMessage(f.channel, "Sorties de la semaine", slack.PostMessageParameters{Attachments: aa})
+		_, _, err = ctx.RTM.PostMessage(f.channel,
+			slack.MsgOptionText("Sorties de la semaine", false),
+			slack.MsgOptionAttachments(aa...),
+		)
 	}
 
 	return err
