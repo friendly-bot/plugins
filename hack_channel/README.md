@@ -6,6 +6,7 @@ Re-enable @channel / @everyone when is disable for simple user
 
 ```json
 {
+    "message": "Make %s great again!",
     "channel_keyword": "@channel", 
     "everyone_keyword": "@everyone", 
     "on_public": false,
@@ -14,6 +15,7 @@ Re-enable @channel / @everyone when is disable for simple user
 }
 ```
 
+* `message`: message send by the bot
 * `channel_keyword`: word that triggering @channel
 * `everyone_keyword`: word that triggering @everyone
 * `on_public`: if bot should mention channel or everyone on public channel

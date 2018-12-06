@@ -11,6 +11,9 @@ import (
 type (
 	// Configuration for the plugin, unmarshal by bot api
 	Configuration struct {
+		// Message send by the bot
+		Message string `json:"message"`
+
 		// ChannelKeyword trigger for @channel
 		ChannelKeyword string `json:"channel_keyword"`
 
@@ -29,6 +32,7 @@ type (
 
 	// HackChannel implement bot.Feature
 	HackChannel struct {
+		message         string
 		channelKeyword  string
 		everyoneKeyword string
 		onPublic        bool
@@ -45,6 +49,7 @@ func NewConfiguration() *Configuration {
 // NewFeature return interface bot.Feature used by the bot for run it
 func NewFeature(conf *Configuration) bot.Feature {
 	return &HackChannel{
+		message:         conf.Message,
 		channelKeyword:  conf.ChannelKeyword,
 		everyoneKeyword: conf.EveryoneKeyword,
 		onPublic:        conf.OnPublic,
@@ -111,7 +116,7 @@ func (f *HackChannel) Run(ctx *bot.Context) error {
 		t = "<!channel>"
 	}
 
-	a := slack.Attachment{Text: fmt.Sprintf("Make %s great again!", t)}
+	a := slack.Attachment{Text: fmt.Sprintf(f.message, t)}
 
 	_, _, e := ctx.RTM.PostMessage(
 		ctx.MsgEvent.Channel,
