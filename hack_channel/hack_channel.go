@@ -111,7 +111,7 @@ func (f *HackChannel) Run(ctx *bot.Context) error {
 		a.Text = "<!channel>"
 	}
 
-	_, _, e := ctx.RTM.PostMessage(ctx.MsgEvent.Channel, slack.MsgOptionAttachments(a), slack.MsgOptionTS(ctx.MsgEvent.Timestamp))
+	_, _, e := ctx.RTM.PostMessage(ctx.MsgEvent.Channel, slack.MsgOptionAttachments(a))
 
 	return e
 }
