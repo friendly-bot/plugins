@@ -105,13 +105,19 @@ func (f *HackChannel) Run(ctx *bot.Context) error {
 	// add extra space for matching with single word
 	sentence := fmt.Sprintf(" %s ", ctx.MsgEvent.Text)
 
-	a := slack.Attachment{Text: "<!everyone>"}
+	t := "<!everyone>"
 
 	if strings.Contains(sentence, f.channelKeyword) {
-		a.Text = "<!channel>"
+		t = "<!channel>"
 	}
 
-	_, _, e := ctx.RTM.PostMessage(ctx.MsgEvent.Channel, slack.MsgOptionAttachments(a))
+	a := slack.Attachment{Text: fmt.Sprintf("Make %s great again!", t)}
+
+	_, _, e := ctx.RTM.PostMessage(
+		ctx.MsgEvent.Channel,
+		slack.MsgOptionAttachments(a),
+		//slack.MsgOptionTS(ctx.MsgEvent.Timestamp),
+	)
 
 	return e
 }
