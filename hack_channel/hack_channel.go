@@ -15,10 +15,10 @@ type (
 		Message string `json:"message"`
 
 		// ChannelKeyword trigger for @channel
-		ChannelKeyword string `json:"channel_keyword"`
+		ChannelKeyword []string `json:"channel_keyword"`
 
-		// EveryoneKeyword trigger for @everyone
-		EveryoneKeyword string `json:"everyone_keyword"`
+		// HereKeyword trigger for @everyone
+		HereKeyword []string `json:"here_keyword"`
 
 		// OnPublic disable or enable mention channel or everyone on public channel
 		OnPublic bool `json:"on_public"`
@@ -33,8 +33,8 @@ type (
 	// HackChannel implement bot.Feature
 	HackChannel struct {
 		message         string
-		channelKeyword  string
-		everyoneKeyword string
+		channelKeyword  []string
+		hereKeyword     []string
 		onPublic        bool
 		enabledChannel  []string
 		disabledChannel []string
@@ -51,7 +51,7 @@ func NewFeature(conf *Configuration) bot.Feature {
 	return &HackChannel{
 		message:         conf.Message,
 		channelKeyword:  conf.ChannelKeyword,
-		everyoneKeyword: conf.EveryoneKeyword,
+		hereKeyword:     conf.HereKeyword,
 		onPublic:        conf.OnPublic,
 		enabledChannel:  conf.EnabledChannel,
 		disabledChannel: conf.DisabledChannel,
@@ -61,9 +61,10 @@ func NewFeature(conf *Configuration) bot.Feature {
 // Skip the run depend on the context, return bool (need to be skipped), string (reason of the skip), and an error if any
 func (f *HackChannel) Skip(ctx *bot.Context) (bool, string, error) {
 	sentence := fmt.Sprintf(" %s ", ctx.MsgEvent.Text)
+	sentence = strings.Replace(sentence, "\n", " ", -1)
 
-	if !contains(sentence, []string{f.channelKeyword, f.everyoneKeyword}) {
-		return true, fmt.Sprintf("no %s or %s", f.channelKeyword, f.everyoneKeyword), nil
+	if !contains(sentence, append(f.channelKeyword, f.hereKeyword...)) {
+		return true, fmt.Sprintf("no %s or %s", f.channelKeyword, f.hereKeyword), nil
 	}
 
 	cID := ctx.MsgEvent.Channel
@@ -83,8 +84,8 @@ func (f *HackChannel) Skip(ctx *bot.Context) (bool, string, error) {
 		isPublic = true
 	}
 
-	if isPublic && f.onPublic {
-		return false, "", nil
+	if isPublic && !f.onPublic {
+		return true, "public channel is not enabled", nil
 	}
 
 	// chan public - public_enable - enable - !disable -> true
@@ -109,10 +110,11 @@ func (f *HackChannel) Skip(ctx *bot.Context) (bool, string, error) {
 func (f *HackChannel) Run(ctx *bot.Context) error {
 	// add extra space for matching with single word
 	sentence := fmt.Sprintf(" %s ", ctx.MsgEvent.Text)
+	sentence = strings.Replace(sentence, "\n", " ", -1)
 
-	t := "<!everyone>"
+	t := "<!here>"
 
-	if strings.Contains(sentence, f.channelKeyword) {
+	if contains(sentence, f.channelKeyword) {
 		t = "<!channel>"
 	}
 
