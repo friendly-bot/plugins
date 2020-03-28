@@ -36,7 +36,7 @@ func (p KeywordReaction) OnMessage(msg *slack.MessageEvent, ctx api.Context) err
 
 	for reaction, regex := range p.reactions {
 		l := ctx.Logger.WithField("reaction", reaction)
-		l.Debug("try regex")
+		l.WithField("regex", regex.String()).Debug("try regex")
 
 		if regex.MatchString(msg.Text) {
 			if err := ctx.RTM.AddReaction(reaction, ir); err != nil {
