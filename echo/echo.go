@@ -15,9 +15,5 @@ func NewOnMessage(_ *viper.Viper) (api.OnMessage, error) {
 func (a Echo) OnMessage(msg *slack.MessageEvent, ctx api.Context) error {
 	ctx.Logger.Info(msg.Text)
 
-	ctx.Logger.WithField("value", ctx.Cache.Get("toto")).Info("before")
-	ctx.Cache.Set("toto", "titi", 0)
-	ctx.Logger.WithField("value", ctx.Cache.Get("toto")).Info("after")
-
 	return nil
 }
