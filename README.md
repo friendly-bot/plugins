@@ -15,7 +15,7 @@ This repository stores all plugins available for [friendly-bot](https://www.gith
 
 ### Cronjob
 
-* [Move annoucement](movie_announcement/README.md)
+* [Movie annoucement](movie_announcement/README.md)
 * [Ping](ping/README.md)
 * [Random coffee](random_coffee/README.md)
 * [Random direct message](random_direct_message/README.md)
