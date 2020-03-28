@@ -17,5 +17,7 @@ This repository stores all plugins available for [friendly-bot](https://www.gith
 
 * [Move annoucement](movie_announcement/README.md)
 * [Ping](ping/README.md)
+* [Random coffee](random_coffee/README.md)
 * [Random direct message](random_direct_message/README.md)
 * [Run command](run_command/README.md)
+
