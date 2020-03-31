@@ -17,8 +17,10 @@ type (
 		groupOf          int
 		channel          string
 		maxNumberOfGroup int
-		message          string
+		header           string
+		footer           string
 		separator        string
+		prefix           string
 	}
 
 	group struct {
@@ -36,8 +38,10 @@ func NewJob(cfg *viper.Viper) (api.Runner, error) {
 		groupOf:          cfg.GetInt("group_of"),
 		channel:          cfg.GetString("channel"),
 		maxNumberOfGroup: cfg.GetInt("max_number_of_group"),
-		message:          cfg.GetString("message"),
+		header:           cfg.GetString("header"),
+		footer:           cfg.GetString("footer"),
 		separator:        cfg.GetString("separator"),
+		prefix:           cfg.GetString("prefix"),
 	}, nil
 }
 
@@ -66,10 +70,11 @@ func (p RandomCoffee) Run(ctx api.Context) error {
 		return nil
 	}
 
-	msg := fmt.Sprintf("%s\n", p.message)
+	msg := p.header
 	for _, g := range groups {
-		msg = fmt.Sprintf("%s\n* %s", msg, g)
+		msg = fmt.Sprintf("%s\n%s %s", msg, p.prefix, g)
 	}
+	msg = fmt.Sprintf("%s%s", msg, p.footer)
 
 	_, _, err = ctx.RTM.PostMessage(p.channel, slack.MsgOptionText(msg, false))
 
