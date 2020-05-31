@@ -68,6 +68,8 @@ func (p RandomDirectMessage) Run(ctx api.Context) error {
 				"context": "get_user_presence",
 				"user":    u.ID,
 			}).Error(err)
+
+			continue
 		}
 
 		if p.Presence != presenceActive {
