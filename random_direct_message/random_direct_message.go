@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/friendly-bot/friendly-bot/api"
 	"github.com/sirupsen/logrus"
 	"github.com/slack-go/slack"
@@ -28,12 +29,12 @@ func NewJob(cfg *viper.Viper) (api.Runner, error) {
 	}, nil
 }
 
-func (p RandomDirectMessage) Run(ctx api.Context) error {
+func (p RandomDirectMessage) Run(ctx api.Context) (err error) {
 	page := ctx.RTM.GetUsersPaginated(slack.GetUsersOptionPresence(true))
-	users := make([]slack.User, 100)
+	users := make([]slack.User, 0, 200)
 
 	for {
-		page, err := page.Next(context.Background())
+		page, err = page.Next(context.Background())
 		if err != nil {
 			break
 		}
@@ -50,13 +51,15 @@ func (p RandomDirectMessage) Run(ctx api.Context) error {
 				"id":               u.ID,
 			}).Debug("user")
 
-			if u.Deleted || u.IsStranger || u.IsBot || u.IsRestricted || u.IsUltraRestricted || u.IsAppUser || ctx.Cache.Exist(u.ID) {
+			if u.ID == "" || u.Deleted || u.IsStranger || u.IsBot || u.IsRestricted || u.IsUltraRestricted || u.IsAppUser || ctx.Cache.Exist(u.ID) {
 				continue
 			}
 
 			users = append(users, u)
 		}
 	}
+
+	ctx.Logger.WithField("count", len(users)).Info("eligible user")
 
 	rand.Shuffle(len(users), func(i, j int) { users[i], users[j] = users[j], users[i] })
 	var user slack.User
@@ -65,8 +68,9 @@ func (p RandomDirectMessage) Run(ctx api.Context) error {
 		p, err := ctx.RTM.GetUserPresence(u.ID)
 		if err != nil {
 			ctx.Logger.WithFields(logrus.Fields{
-				"context": "get_user_presence",
-				"user":    u.ID,
+				"context":   "get_user_presence",
+				"user_name": u.Name,
+				"user_id":   u.ID,
 			}).Error(err)
 
 			continue
@@ -89,14 +93,14 @@ func (p RandomDirectMessage) Run(ctx api.Context) error {
 		"message": message,
 	}).Info("send direct message")
 
-	/*_, _, err := ctx.RTM.PostMessage(user.ID,
+	_, _, err = ctx.RTM.PostMessage(user.ID,
 		slack.MsgOptionText(message, false),
 		slack.MsgOptionAsUser(true),
 	)
 
 	if err != nil {
 		return fmt.Errorf("PostMessage: %w", err)
-	}*/
+	}
 
 	return nil
 }
