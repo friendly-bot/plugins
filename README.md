@@ -13,6 +13,10 @@ This repository stores all plugins available for [friendly-bot](https://www.gith
 * [Keyword reaction](keyword_reaction/README.md)
 * [Random reaction](random_reaction/README.md)
 
+### on_reaction_added
+
+* [Reaction reaction](reaction_reaction/README.md)
+
 ### Cronjob
 
 * [Movie annoucement](movie_announcement/README.md)

@@ -1,4 +1,4 @@
-PLUGINS := auto_attachment_action echo keyword_reaction movie_announcement ping random_direct_message random_reaction run_command random_coffee
+PLUGINS := auto_attachment_action echo keyword_reaction movie_announcement ping random_direct_message random_reaction run_command random_coffee reaction_reaction
 OUTPUT := ./build
 
 clean:
