@@ -1,143 +1,47 @@
 package main
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"github.com/slack-go/slack"
-	"io/ioutil"
-	"net/http"
-	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/cyruzin/golang-tmdb"
 	"github.com/friendly-bot/friendly-bot/api"
-	"github.com/grokify/html-strip-tags-go"
-	"github.com/sirupsen/logrus"
+	"github.com/slack-go/slack"
 	"github.com/spf13/viper"
-)
-
-const (
-	endpoint              = "http://api.allocine.fr/rest/v3/movielist?"
-	ReleaseStateReprise   = "Reprise"
-	ReleaseVersionRestore = "Version restaurée"
-	LinkWeb               = "aco:web"
-	LinkShowtimes         = "aco:web_showtimes"
-	LinkTrailers          = "aco:web_trailers"
-
-	proxy = "https://images.weserv.nl/?url=%s&h=%d"
 )
 
 var colors = []string{"#FECC00", "#6197D0"}
 
 type MovieAnnouncement struct {
-	channel     string
-	partnerKey  string
-	secretKey   string
-	heightImage int
+	channel    string
+	client     *tmdb.Client
+	region     string
+	language   string
+	sizePoster string
 }
 
-type (
-	MovieList struct {
-		// Feed content the response
-		Feed struct {
-			// Movies list
-			Movies []Movie `json:"movie"`
-		} `json:"feed"`
-	}
-
-	// Movie entity
-	Movie struct {
-		// Title of the movie
-		Title string `json:"title"`
-
-		// Genres of the movie
-		Genres Genres `json:"genre"`
-
-		// Release date and original release if any
-		Release Release `json:"release"`
-
-		// SynopsisShort short version of the synopsis
-		SynopsisShort string `json:"synopsisShort"`
-
-		// CastingShort short version of the casting
-		CastingShort CastingShort `json:"castingShort"`
-
-		// Poster information
-		Poster Poster `json:"poster"`
-
-		// Links to another resource linked with this movie
-		Links Links `json:"link"`
-	}
-
-	// Genre entity
-	Genre struct {
-		// Name -
-		Name string `json:"$"`
-	}
-
-	// Genres is alias for []Genre
-	Genres []Genre
-
-	// Poster information
-	Poster struct {
-		// Href to poster
-		Href string `json:"href"`
-	}
-
-	// Release information
-	Release struct {
-		// ReleaseDate in theaters
-		ReleaseDate string `json:"releaseDate"`
-
-		// ReleaseState (if reprise)
-		ReleaseState ReleaseState `json:"releaseState"`
-
-		// ReleaseVersion (if restored)
-		ReleaseVersion ReleaseVersion `json:"releaseVersion"`
-	}
-
-	// ReleaseState if is original release or reprise
-	ReleaseState struct {
-		// Value -
-		Value string `json:"$"`
-	}
-
-	// ReleaseVersion if is original release or restored version
-	ReleaseVersion struct {
-		// Value -
-		Value string `json:"$"`
-	}
-
-	// CastingShort embed directors and actors casting
-	CastingShort struct {
-		Directors string `json:"directors"`
-		Actors    string `json:"actors"`
-	}
-
-	Link struct {
-		Rel  string `json:"rel"`
-		Name string `json:"name"`
-		Href string `json:"href"`
-	}
-
-	Links []Link
-)
-
 func NewJob(cfg *viper.Viper) (api.Runner, error) {
+	c, err := tmdb.Init(cfg.GetString("api_key"))
+	if err != nil {
+		return nil, err
+	}
+
+	c.SetClientAutoRetry()
+
 	return &MovieAnnouncement{
-		channel:     cfg.GetString("channel"),
-		partnerKey:  cfg.GetString("partner_key"),
-		secretKey:   cfg.GetString("secret_key"),
-		heightImage: cfg.GetInt("height_image"),
-	}, nil
+		channel:    cfg.GetString("channel"),
+		client:     c,
+		region:     cfg.GetString("region"),
+		language:   cfg.GetString("language"),
+		sizePoster: cfg.GetString("size_poster"),
+	}, err
 }
 
 func (p MovieAnnouncement) Run(ctx api.Context) error {
-	movies, err := p.retrieveReleaseMoviesToday(ctx)
-
-	if err != nil || len(movies) == 0 {
+	movies, err := p.retrieveMoviesNowPlaying(ctx)
+	if err != nil {
 		return err
 	}
 
@@ -146,30 +50,42 @@ func (p MovieAnnouncement) Run(ctx api.Context) error {
 	var aa []slack.Attachment
 	var count int
 
-	for _, movie := range movies {
-		if movie.Release.ReleaseState.Value == ReleaseStateReprise || movie.Release.ReleaseVersion.Value == ReleaseVersionRestore || movie.Release.ReleaseDate != today {
+	for _, movie := range movies.Results {
+		// fuck movie without overview
+		if movie.ReleaseDate != today || movie.Overview == "" {
 			continue
 		}
 
+		ctx.Logger.WithField("id", movie.ID).Debug("request movie details")
+		details, err := p.client.GetMovieDetails(int(movie.ID), map[string]string{"language": p.language})
+		if err != nil {
+			return fmt.Errorf("GetMovieDetails: (id: %d) %w", movie.ID, err)
+		}
+
+		var genres string
+		for _, g := range details.Genres {
+			genres = fmt.Sprintf("%s, %s", genres, g.Name)
+		}
+
+		genres = strings.TrimPrefix(genres, ", ")
+
 		a := slack.Attachment{
 			Title:    movie.Title,
-			Text:     strip.StripTags(movie.SynopsisShort),
-			ImageURL: generateURL(movie.Poster.Href, p.heightImage),
-			Color:    colors[count%2],
+			Text:     fmt.Sprintf("%s\n:invisible:", movie.Overview),
+			ImageURL: tmdb.GetImageURL(movie.PosterPath, p.sizePoster),
+			Color:    colors[count%len(colors)],
 			Fields: []slack.AttachmentField{
-				{Title: "Directors", Value: movie.CastingShort.Directors, Short: true},
-				{Title: "Genres", Value: movie.Genres.AllGenres(), Short: true},
-				{Title: "Actors", Value: movie.CastingShort.Actors, Short: false},
+				{Title: "Genres", Value: genres, Short: true},
 			},
-			Actions: []slack.AttachmentAction{
-				{Text: "Allocine", Type: "button", URL: movie.Links.GetHrefFor(LinkWeb)},
-				{Text: "Bande annonces", Type: "button", URL: movie.Links.GetHrefFor(LinkTrailers)},
-				{Text: "Séances", Type: "button", URL: movie.Links.GetHrefFor(LinkShowtimes)},
-			},
+		}
+
+		if details.Runtime > 0 {
+			a.Fields = append(a.Fields, slack.AttachmentField{Title: "Duration", Value: fmt.Sprintf("%d min", details.Runtime), Short: true})
 		}
 
 		aa = append(aa, a)
 		count++
+
 	}
 
 	if len(aa) > 0 {
@@ -182,70 +98,22 @@ func (p MovieAnnouncement) Run(ctx api.Context) error {
 	return err
 }
 
-func (p MovieAnnouncement) retrieveReleaseMoviesToday(ctx api.Context) ([]Movie, error) {
-	c := http.Client{
-		Timeout: time.Second * 10,
-	}
+func (p MovieAnnouncement) retrieveMoviesNowPlaying(ctx api.Context) (*tmdb.MovieNowPlayingResults, error) {
+	opts := map[string]string{"region": p.region, "language": p.language}
+	movies := &tmdb.MovieNowPlayingResults{}
 
-	sed := time.Now().Format("20060102")
+	for page, totalPages := 1, 1; page <= totalPages; page++ {
+		ctx.Logger.WithField("page", page).Debug("request now playing")
 
-	q := fmt.Sprintf(
-		"partner=%s&count=50&filter=%s&page=1&order=datedesc&format=json&sed=%s",
-		p.partnerKey, "nowshowing", sed,
-	)
-
-	s := sha1.Sum([]byte(p.secretKey + q))
-	sig := url.PathEscape(base64.RawStdEncoding.EncodeToString(s[:]))
-	r, err := c.Get(fmt.Sprintf("%s%s&sig=%s%%3D", endpoint, q, sig))
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() { _ = r.Body.Close() }()
-
-	var movies MovieList
-	var bs []byte
-
-	if bs, err = ioutil.ReadAll(r.Body); err != nil {
-		return nil, err
-	}
-
-	if r.StatusCode != http.StatusOK {
-		ctx.Logger.WithFields(logrus.Fields{"status_code": r.StatusCode, "response": string(bs)}).Warn("allocine api error")
-		return nil, fmt.Errorf("allocine api error code %d", r.StatusCode)
-	}
-
-	if err = json.Unmarshal(bs, &movies); err != nil {
-		return nil, err
-	}
-
-	return movies.Feed.Movies, nil
-}
-
-func (gs Genres) AllGenres() string {
-	var genres string
-
-	for _, g := range gs {
-		genres = fmt.Sprintf("%s, %s", genres, g.Name)
-	}
-
-	return strings.TrimLeft(genres, ", ")
-}
-
-func (ls Links) GetHrefFor(rel string) string {
-	for _, l := range ls {
-		if l.Rel == rel {
-			return l.Href
+		opts["page"] = strconv.Itoa(page)
+		ms, err := p.client.GetMovieNowPlaying(opts)
+		if err != nil {
+			return nil, fmt.Errorf("GetMovieNowPlaying (page: %d): %w", page, err)
 		}
+		totalPages = int(ms.TotalPages)
+
+		movies.Results = append(movies.Results, ms.Results...)
 	}
 
-	return ""
-}
-
-func generateURL(url string, h int) string {
-	url = strings.TrimPrefix(url, "http://")
-	url = strings.TrimPrefix(url, "https://")
-
-	return fmt.Sprintf(proxy, url, h)
+	return movies, nil
 }
