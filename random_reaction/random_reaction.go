@@ -29,6 +29,10 @@ func NewOnMessage(cfg *viper.Viper) (api.OnMessage, error) {
 }
 
 func (p RandomReaction) OnMessage(msg *slack.MessageEvent, ctx api.Context) error {
+	if msg.Hidden {
+		return nil
+	}
+
 	ir := slack.ItemRef{Channel: msg.Channel, Timestamp: msg.Timestamp}
 
 	for reaction, probability := range p.reactions {
