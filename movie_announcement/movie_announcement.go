@@ -85,7 +85,6 @@ func (p MovieAnnouncement) Run(ctx api.Context) error {
 
 		aa = append(aa, a)
 		count++
-
 	}
 
 	if len(aa) > 0 {
@@ -103,10 +102,12 @@ func (p MovieAnnouncement) retrieveMoviesNowPlaying(ctx api.Context) (*tmdb.Movi
 	movies := &tmdb.MovieNowPlayingResults{}
 
 	for page, totalPages := 1, 1; page <= totalPages; page++ {
-		ctx.Logger.WithField("page", page).Debug("request now playing")
+		ctx.Logger.WithField("page", page).Debug("request upcoming")
 
 		opts["page"] = strconv.Itoa(page)
-		ms, err := p.client.GetMovieNowPlaying(opts)
+		// because developers didn't know the definition of "upcoming" and "now playing"
+		// and the endpoint "now playing" doesn't return films currently in theaters
+		ms, err := p.client.GetMovieUpcoming(opts)
 		if err != nil {
 			return nil, fmt.Errorf("GetMovieNowPlaying (page: %d): %w", page, err)
 		}
